@@ -5,23 +5,29 @@
 #include "windows.h"
 #include <conio.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string>
 
 int main(int argc, char* argv[])
 {
 	HANDLE hComm;
 	
-	printf("maple-reset 0.1\n");
+	printf("maple-reset 0.2\n");
 	printf("This program is Free Sofware and has NO WARRANTY\n\n");
-	printf("https:\/\/github.com\/benlye\/maple-reset\n\n");
+	printf("https://github.com/benlye/maple-reset\n\n");
 
 	if (argc == 1) 
 	{
-		fprintf(stderr, "ERROR: Port not specified\n", argv[1]);
-		fprintf(stderr, "\nUsage: maple-reset.exe COM3\n", argv[1]);
+		fprintf(stderr, "ERROR: Port not specified\n");
+		fprintf(stderr, "\nUsage: maple-reset.exe COM3\n");
 		return -1;
 	}
 
-	hComm = CreateFileA(argv[1], GENERIC_READ | GENERIC_WRITE,
+	std::string comPort = "\\\\.\\";
+	comPort += argv[1];
+
+	hComm = CreateFileA(comPort.c_str(),
+		GENERIC_READ | GENERIC_WRITE,
 		0,
 		0,
 		OPEN_EXISTING,
