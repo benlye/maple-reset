@@ -1,3 +1,4 @@
+//
 // maple-reset.cpp : This file contains the 'main' function. Program execution begins and ends there.
 //
 
@@ -12,7 +13,7 @@ int main(int argc, char* argv[])
 {
 	HANDLE hComm;
 	
-	printf("maple-reset 0.2\n");
+	printf("maple-reset 0.3\n");
 	printf("This program is Free Sofware and has NO WARRANTY\n\n");
 	printf("https://github.com/benlye/maple-reset\n\n");
 
