@@ -13,14 +13,17 @@ int main(int argc, char* argv[])
 {
 	HANDLE hComm;
 	
-	printf("maple-reset 0.3\n");
+	printf("maple-reset 0.4\n");
 	printf("This program is Free Sofware and has NO WARRANTY\n\n");
 	printf("https://github.com/benlye/maple-reset\n\n");
 
-	if (argc == 1) 
+	if (argc < 2 || argc > 3)
 	{
-		fprintf(stderr, "ERROR: Port not specified\n");
-		fprintf(stderr, "\nUsage: maple-reset.exe COM3\n");
+		fprintf(stderr, "Usage: maple-reset.exe [serial port] [optional delay in milliseconds]\n");
+		fprintf(stderr, "\nExample: maple-reset.exe COM3\n");
+		fprintf(stderr, "         Resets the device on COM3\n");
+		fprintf(stderr, "\nExample: maple-reset.exe COM3 1000\n");
+		fprintf(stderr, "         Resets the device on COM3 then waits 1s before returning\n");
 		return -1;
 	}
 
@@ -61,12 +64,17 @@ int main(int argc, char* argv[])
 
 	if (!WriteFile(hComm, bytes_to_send, 4, &bytes_written, NULL))
 	{
-		fprintf(stderr, "ERROR: Failed to send string.\n");
+		fprintf(stderr, "ERROR: Failed to send string\n");
 		CloseHandle(hComm);
 		return 3;
 	}
 
-	fprintf(stdout, "Reset sequence sent to %s.\n", argv[1]);
+	fprintf(stdout, "Reset sequence sent to %s\n", argv[1]);
+
+	if (argc == 3)
+	{
+		Sleep(atol(argv[2]));
+	}
 
 	return 0;
 }
