@@ -19,11 +19,11 @@ int main(int argc, char* argv[])
 
 	if (argc < 2 || argc > 3)
 	{
-		fprintf(stderr, "Usage: maple-reset.exe [serial port] [optional delay in milliseconds]\n");
-		fprintf(stderr, "\nExample: maple-reset.exe COM3\n");
-		fprintf(stderr, "         Resets the device on COM3\n");
-		fprintf(stderr, "\nExample: maple-reset.exe COM3 1000\n");
-		fprintf(stderr, "         Resets the device on COM3 then waits 1s before returning\n");
+		fprintf(stdout, "Usage: maple-reset.exe [serial port] [optional delay in milliseconds]\n");
+		fprintf(stdout, "\nExample: maple-reset.exe COM3\n");
+		fprintf(stdout, "         Resets the device on COM3\n");
+		fprintf(stdout, "\nExample: maple-reset.exe COM3 1000\n");
+		fprintf(stdout, "         Resets the device on COM3 then waits 1s before returning\n");
 		return -1;
 	}
 
@@ -40,7 +40,7 @@ int main(int argc, char* argv[])
 
 	if (hComm == INVALID_HANDLE_VALUE)
 	{
-		fprintf(stderr, "ERROR: Failed to open %s\n", argv[1]);
+		fprintf(stdout, "ERROR: Failed to open %s\n", argv[1]);
 		return -1;
 	}
 
@@ -53,18 +53,18 @@ int main(int argc, char* argv[])
 	DWORD bytes_written, total_bytes_written = 0;
 
 	if (EscapeCommFunction(hComm, SETDTR) == 0) {
-		fprintf(stderr, "ERROR: Failed to set DTR\n");
+		fprintf(stdout, "ERROR: Failed to set DTR\n");
 		return 1;
 	}
 	
 	if (EscapeCommFunction(hComm, CLRDTR) == 0) {
-		fprintf(stderr, "ERROR: Failed to clear DTR\n");
+		fprintf(stdout, "ERROR: Failed to clear DTR\n");
 		return 2;
 	}
 
 	if (!WriteFile(hComm, bytes_to_send, 4, &bytes_written, NULL))
 	{
-		fprintf(stderr, "ERROR: Failed to send string\n");
+		fprintf(stdout, "ERROR: Failed to send string\n");
 		CloseHandle(hComm);
 		return 3;
 	}
