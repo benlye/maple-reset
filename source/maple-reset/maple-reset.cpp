@@ -49,10 +49,11 @@ int main(int argc, char* argv[])
 	{
 		fprintf(stdout, "Usage: maple-reset.exe [serial port] [optional timeout in milliseconds]\n\n");
 		fprintf(stdout, "The optional timeout sets the maximum number of milliseconds the process will wait for a DFU device.\n");
-		fprintf(stdout, "If a DFU device appears before the timeout expires the process will return immediately.\n");
-		fprintf(stdout, "A default timeout of 2000ms is used if one is not specified.\n");
+		fprintf(stdout, " - If a DFU device appears before the timeout expires the process will return successfully immediately.\n");
+		fprintf(stdout, " - If no timeout is specified the process will return successfully immediately after sending the reset pulse.\n");
+		fprintf(stdout, " - If a timeout is specified and a DFU device does not appear before it elapses, the process will return a failure.\n");
 		fprintf(stdout, "\nExample: maple-reset.exe COM3\n");
-		fprintf(stdout, "         Resets the device on COM3\n");
+		fprintf(stdout, "         Resets the device on COM3 and returns immediately\n");
 		fprintf(stdout, "\nExample: maple-reset.exe COM3 5000\n");
 		fprintf(stdout, "         Resets the device on COM3 then waits up to 5s for the DFU device before returning\n");
 		return -1;
@@ -103,34 +104,34 @@ int main(int argc, char* argv[])
 	fprintf(stdout, "Reset sequence sent to %s\n", argv[1]);
 
 	// Get the timeout from the arguments or default to 2s
-	int waitTimeout = argc == 3 ? atol(argv[2]) : 2000;
-	
-	fprintf(stdout, "Waiting for DFU device ...");
-
-	// Get the start time of the wait loop
-	std::clock_t start;
-	double duration = 0;
-	start = std::clock();
-
-	// Loop until the DFU device is found or the timeout expires
-	while (findDfuDevice() == false && duration <= waitTimeout)
+	if (argc == 3 and atol(argv[2]) > 0)
 	{
-		duration = ((double)std::clock() - (double)start);
-		fprintf(stdout, ".");
-		Sleep(50);
-	}
+		fprintf(stdout, "Waiting for DFU device ...");
 
-	// Show a message
-	if (findDfuDevice() == true)
-	{
-		printf(" got it.\n\n");
-		printf("Device reset successful in %.0fms.\n", duration);
-	}
-	else 
-	{
-		printf(" failed.\n\n");
-		printf("ERROR: Device reset timed out.\n");
-		return 4;
+		// Get the start time of the wait loop
+		std::clock_t start;
+		double duration = 0;
+		start = std::clock();
+
+		// Loop until the DFU device is found or the timeout expires
+		while (findDfuDevice() == false && duration <= atol(argv[2]))
+		{
+			duration = ((double)std::clock() - (double)start);
+			fprintf(stdout, ".");
+			Sleep(50);
+		}
+
+		if (findDfuDevice() == true)
+		{
+			printf(" got it.\n\n");
+			printf("Device reset successful in %.0fms.\n", duration);
+		}
+		else
+		{
+			printf(" failed.\n\n");
+			printf("ERROR: Device reset timed out.\n");
+			return 4;
+		}
 	}
 
 	return 0;
