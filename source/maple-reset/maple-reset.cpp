@@ -5,25 +5,56 @@
 #include "pch.h"
 #include "windows.h"
 #include <conio.h>
+#include <SetupAPI.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string>
+#include "tchar.h"
+#include <ctime>
+
+bool findDfuDevice()
+{
+	unsigned index;
+	HDEVINFO hDevInfo;
+	SP_DEVINFO_DATA DeviceInfoData;
+	TCHAR HardwareID[1024];
+
+	// Get all the connected USB devices
+	hDevInfo = SetupDiGetClassDevs(NULL, TEXT("USB"), NULL, DIGCF_PRESENT | DIGCF_ALLCLASSES);
+
+	// Iterate over the devices looking for the one we care about
+	for (index = 0; ; index++) {
+		DeviceInfoData.cbSize = sizeof(DeviceInfoData);
+		if (!SetupDiEnumDeviceInfo(hDevInfo, index, &DeviceInfoData)) {
+			return false;
+		}
+
+		SetupDiGetDeviceRegistryProperty(hDevInfo, &DeviceInfoData, SPDRP_HARDWAREID, NULL, (BYTE*)HardwareID, sizeof(HardwareID), NULL);
+		if (_tcsstr(HardwareID, _T("VID_1EAF&PID_0003"))) {
+			// Found it
+			return true;
+		}
+	}
+}
 
 int main(int argc, char* argv[])
 {
 	HANDLE hComm;
 	
-	printf("maple-reset 0.4\n");
+	printf("maple-reset 0.5\n");
 	printf("This program is Free Sofware and has NO WARRANTY\n\n");
 	printf("https://github.com/benlye/maple-reset\n\n");
 
 	if (argc < 2 || argc > 3)
 	{
-		fprintf(stdout, "Usage: maple-reset.exe [serial port] [optional delay in milliseconds]\n");
+		fprintf(stdout, "Usage: maple-reset.exe [serial port] [optional timeout in milliseconds]\n\n");
+		fprintf(stdout, "The optional timeout sets the maximum number of milliseconds the process will wait for a DFU device.\n");
+		fprintf(stdout, "If a DFU device appears before the timeout expires the process will return immediately.\n");
+		fprintf(stdout, "A default timeout of 2000ms is used if one is not specified.\n");
 		fprintf(stdout, "\nExample: maple-reset.exe COM3\n");
 		fprintf(stdout, "         Resets the device on COM3\n");
-		fprintf(stdout, "\nExample: maple-reset.exe COM3 1000\n");
-		fprintf(stdout, "         Resets the device on COM3 then waits 1s before returning\n");
+		fprintf(stdout, "\nExample: maple-reset.exe COM3 5000\n");
+		fprintf(stdout, "         Resets the device on COM3 then waits up to 5s for the DFU device before returning\n");
 		return -1;
 	}
 
@@ -71,9 +102,35 @@ int main(int argc, char* argv[])
 
 	fprintf(stdout, "Reset sequence sent to %s\n", argv[1]);
 
-	if (argc == 3)
+	// Get the timeout from the arguments or default to 2s
+	int waitTimeout = argc == 3 ? atol(argv[2]) : 2000;
+	
+	fprintf(stdout, "Waiting for DFU device ...");
+
+	// Get the start time of the wait loop
+	std::clock_t start;
+	double duration = 0;
+	start = std::clock();
+
+	// Loop until the DFU device is found or the timeout expires
+	while (findDfuDevice() == false && duration <= waitTimeout)
 	{
-		Sleep(atol(argv[2]));
+		duration = ((double)std::clock() - (double)start);
+		fprintf(stdout, ".");
+		Sleep(50);
+	}
+
+	// Show a message
+	if (findDfuDevice() == true)
+	{
+		printf(" got it.\n\n");
+		printf("Device reset successful in %.0fms.\n", duration);
+	}
+	else 
+	{
+		printf(" failed.\n\n");
+		printf("ERROR: Device reset timed out.\n");
+		return 4;
 	}
 
 	return 0;
